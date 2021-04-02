@@ -28,6 +28,12 @@
 #endif
 
 /*
+ * This macro definition enables higher-level functionality like
+ * tables and arrays. It is experimental.
+ */
+#define TNM_SNMP_APP_LEVEL_FEATURES
+
+/*
  * The global variable TnmSnmp list contains all existing
  * session handles.
  */
@@ -120,7 +126,7 @@ static int
 Extract		(Tcl_Interp *interp, int what, Tcl_Obj *objPtr,
 			     Tcl_Obj *indexObjPtr);
 
-#if 0
+#ifdef TNM_SNMP_APP_LEVEL_FEATURES
 static int
 ExpandTable	(Tcl_Interp *interp, 
 			     char *tList, Tcl_DString *dst);
@@ -1069,7 +1075,7 @@ Tnm_SnmpObjCmd(ClientData clientData, Tcl_Interp *interp, int	objc, Tcl_Obj *con
 
     enum commands { 
 	cmdAlias,
-#if 0
+#ifdef TNM_SNMP_APP_LEVEL_FEATURES
 	cmdArray,
 #endif
 	cmdDelta, cmdExpand, cmdFind, cmdGenerator, cmdInfo,
@@ -1079,7 +1085,7 @@ Tnm_SnmpObjCmd(ClientData clientData, Tcl_Interp *interp, int	objc, Tcl_Obj *con
 
     static const char *cmdTable[] = {
 	"alias",
-#if 0
+#ifdef TNM_SNMP_APP_LEVEL_FEATURES
 	"array",
 #endif
 	"delta", "expand", "find", "generator", "info",
@@ -1163,21 +1169,23 @@ Tnm_SnmpObjCmd(ClientData clientData, Tcl_Interp *interp, int	objc, Tcl_Obj *con
 	break;
     }
 
-#if 0
+#ifdef TNM_SNMP_APP_LEVEL_FEATURES
     case cmdArray: {
 	Tcl_DString ds;
 	Tcl_DStringInit(&ds);
+
 	if (TnmMibLoad(interp) != TCL_OK) {
             result = TCL_ERROR;
             break;
         }
-        if (argc != 5) {
-            TnmWrongNumArgs(interp, 2, argv, "set arrayName varBindList");
+        if (objc != 5) {
+            Tcl_WrongNumArgs(interp, 2, objv, "set arrayName varBindList");
             result = TCL_ERROR;
             break;
         }
 	Tcl_DStringGetResult(interp, &ds);
-	ScalarSetVar(interp, argv[4], argv[3], &ds);
+	name = Tcl_GetString(objv[3]);
+	ScalarSetVar(interp, objv[4], objv[3], &ds);
 	Tcl_DStringResult(interp, &ds);
 	break;
     }
@@ -1239,7 +1247,8 @@ Tnm_SnmpObjCmd(ClientData clientData, Tcl_Interp *interp, int	objc, Tcl_Obj *con
 	
 	session = TnmSnmpCreateSession(interp, TNM_SNMP_GENERATOR);
 	session->config = &generatorConfig;
-	result = TnmSetConfig(interp, session->config,
+	result = TnmSetConfig(interp, ses
+			sion->config,
 			      (ClientData) session, objc, objv);
 	if (result != TCL_OK) {
 	    TnmSnmpDeleteSession(session);
@@ -1703,7 +1712,7 @@ GeneratorCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 
     return TCL_OK;
 
-#if 0
+#ifdef TNM_SNMP_APP_LEVEL_FEATURES
     /*
      * All commands handled below need a well configured session.
      * Check if we have one and return an error if something is
@@ -2896,7 +2905,7 @@ Extract(Tcl_Interp *interp, int what, Tcl_Obj *objPtr, Tcl_Obj *indexObjPtr)
 
     return TCL_OK;
 }
-#if 0
+#ifdef TNM_SNMP_APP_LEVEL_FEATURES
 
 /*
  *----------------------------------------------------------------------
@@ -3289,7 +3298,7 @@ Scalars(Tcl_Interp *interp, TnmSnmp *session, char *group, char *arrayName)
 	}
 
 	ScalarSetVar(interp, interp->result, arrayName, &result);
-    }
+    }tcl libtcl
     ckfree((char *) largv);
     Tcl_DStringFree(&varList);
     Tcl_DStringResult(interp, &result);
